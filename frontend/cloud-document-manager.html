@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud-Based Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    (function(){
+      try {
+        var saved = localStorage.getItem('cbms_theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch(e){}
+    })();
+  </script>
+
+<style>
+  :root{
+    --paper: #E7DFCB;
+    --paper-deep: #DCD2B7;
+    --paper-card: #F1EADA;
+    --paper-card-subtle: #F7F3E9;
+    --ink: #262220;
+    --ink-soft: #6E6353;
+    --ink-faint: #9B8F79;
+    --navy: #22314A;
+    --navy-deep: #16202F;
+    --stamp-red: #A5382C;
+    --moss: #55643F;
+    --gold: #A9791E;
+    --line: #C7BB9E;
+    --line-soft: #D6CBAE;
+    --radius-s: 7px;
+    --radius-m: 10px;
+    --radius-l: 14px;
+    --shadow-card: 0 1px 3px rgba(38,34,32,0.06), 0 4px 14px rgba(38,34,32,0.05);
+    --shadow-panel: -6px 0 24px rgba(22,32,47,0.14);
+    --input-bg: #FFFFFF;
+    --card-hover: rgba(255,255,255,0.7);
+    --row-hover: rgba(255,255,255,0.65);
+    --row-selected: #FFFFFF;
+    --rail-bg: #22314A;
+    --rail-text: #E9E4D6;
+    --rail-hover: rgba(233,228,214,0.09);
+    --rail-active-bg: #E9E4D6;
+    --rail-active-text: #16202F;
+    --topbar-bg: #E7DFCB;
+    --topbar-btn-hover: rgba(0,0,0,0.06);
+    --dropzone-bg: rgba(255,255,255,0.45);
+    --dropzone-border: #C7BB9E;
+    --code-bg: rgba(0,0,0,0.05);
+    --overlay-bg: rgba(22,32,47,0.45);
+  }
+
+  [data-theme="dark"]{
+    --paper: #111622;
+    --paper-deep: #171E2D;
+    --paper-card: #1A2334;
+    --paper-card-subtle: #202B3E;
+    --ink: #EDF2F7;
+    --ink-soft: #94A3B8;
+    --ink-faint: #64748B;
+    --navy: #37527E;
+    --navy-deep: #0B1019;
+    --stamp-red: #E05243;
+    --moss: #688A4F;
+    --gold: #E5A93C;
+    --line: #263348;
+    --line-soft: #1D2738;
+    --shadow-card: 0 2px 10px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.25);
+    --shadow-panel: -6px 0 30px rgba(0,0,0,0.6);
+    --input-bg: #141B28;
+    --card-hover: rgba(255,255,255,0.04);
+    --row-hover: rgba(255,255,255,0.04);
+    --row-selected: #202B3E;
+    --rail-bg: #0B0F17;
+    --rail-text: #E2E8F0;
+    --rail-hover: rgba(255,255,255,0.07);
+    --rail-active-bg: #22314A;
+    --rail-active-text: #F1F5F9;
+    --topbar-bg: #111622;
+    --topbar-btn-hover: rgba(255,255,255,0.09);
+    --dropzone-bg: rgba(26,35,52,0.5);
+    --dropzone-border: #2B384F;
+    --code-bg: rgba(255,255,255,0.08);
+    --overlay-bg: rgba(5,8,14,0.7);
+  }
+
+  *, *::before, *::after{ box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    transition: background-color .2s ease, color .2s ease;
+  }
+
+  .cbms-root{
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(38,34,32,0.015) 0px, rgba(38,34,32,0.015) 1px, transparent 1px, transparent 3px);
+    overflow: hidden;
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    position: relative;
+    border: none;
+    transition: background-color .2s ease, color .2s ease;
+  }
+
+  .cbms-root *{ box-sizing: border-box; }
+
+  button{ font-family: inherit; cursor: pointer; }
+  input, select{ font-family: inherit; }
+
+  ::selection{ background: var(--gold); color: #fff; }
+
+  .cbms-root :focus-visible{ outline: 2px solid var(--navy); outline-offset: 2px; }
+
+  .cbms-root ::-webkit-scrollbar{ width: 8px; height: 8px; }
+  .cbms-root ::-webkit-scrollbar-thumb{ background: var(--ink-faint); border-radius: 4px; }
+  .cbms-root ::-webkit-scrollbar-track{ background: transparent; }
+
+  /* ================= LOGIN & SIGN UP ================= */
+  .login-screen{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: var(--paper); position:relative; }
+  .login-card{
+    width:340px; max-height:94%; overflow-y:auto; background: var(--paper-card); border:1px solid var(--line);
+    border-radius: var(--radius-l); padding:26px; box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+  }
+  .login-tabs{ display:flex; border-bottom:1px solid var(--line); margin-bottom:16px; }
+  .login-tab{
+    flex:1; background:none; border:none; padding:9px 12px; font-size:12.5px; font-weight:600;
+    color:var(--ink-soft); border-bottom:2px solid transparent; border-radius: var(--radius-m) var(--radius-m) 0 0;
+    cursor:pointer; transition: all .14s ease;
+  }
+  .login-tab.active{ color:var(--navy-deep); border-bottom-color: var(--stamp-red); font-weight:700; background: var(--card-hover); }
+  [data-theme="dark"] .login-tab.active{ color: var(--ink); }
+  .login-field{ display:block; font-size:11px; color:var(--ink-soft); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em; }
+  .login-field input{
+    display:block; width:100%; margin-top:5px; padding:9px 12px; border:1px solid var(--line);
+    border-radius: var(--radius-m); font-size:13px; text-transform:none; letter-spacing:normal;
+    color:var(--ink); background: var(--input-bg); transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .login-field input:focus{ border-color: var(--navy); outline:none; box-shadow: 0 0 0 3px rgba(34,49,74,0.15); }
+  .login-error{ font-size:11.5px; color: var(--stamp-red); margin:-4px 0 12px 0; background:rgba(165,56,44,0.08); padding:7px 10px; border-radius: var(--radius-s); }
+  .demo-accounts{ display:flex; flex-direction:column; gap:7px; }
+  .demo-chip{
+    display:flex; align-items:center; gap:8px; background: var(--input-bg); border:1px solid var(--line);
+    border-radius: var(--radius-m); padding:8px 10px; font-size:12px; text-align:left; width:100%;
+    color: var(--ink); cursor:pointer; transition: all .14s ease;
+  }
+  .demo-chip:hover{ border-color: var(--ink-faint); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .login-foot{ margin-top:14px; font-size:10.5px; color: var(--ink-faint); line-height:1.5; text-align:center; }
+  .login-foot code{ background: var(--code-bg); padding: 2px 6px; border-radius: 4px; }
+
+  .role-pill{
+    display:inline-block; padding:3px 8px; border-radius: 12px; color:#fff; font-size:9.5px;
+    font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;
+  }
+
+  /* ================= RAIL ================= */
+  .rail{
+    width: 216px; flex: 0 0 auto; background: var(--rail-bg); color: var(--rail-text);
+    display: flex; flex-direction: column; padding: 18px 12px; position: relative;
+    transition: background-color .2s ease;
+  }
+  .rail::after{
+    content:''; position:absolute; top:0; right:0; bottom:0; width:1px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35), transparent);
+  }
+  .brand{ padding: 4px 8px 18px 8px; border-bottom: 1px solid rgba(233,228,214,0.14); margin-bottom: 14px; }
+  .brand-mark{ font-family: 'Special Elite', monospace; font-size: 15px; letter-spacing: 0.06em; line-height: 1.35; color: #F2EEE0; }
+  .brand-sub{ font-size: 10.5px; color: #A9B0BC; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 3px; }
+
+  .tabs{ display:flex; flex-direction:column; gap: 4px; }
+  .tab{
+    display:flex; align-items:center; gap:10px; background: transparent; border: none; color: var(--rail-text);
+    text-align:left; padding: 9px 12px; border-radius: var(--radius-m); font-size: 13px; font-weight: 500;
+    letter-spacing: 0.01em; position: relative; transition: all .14s ease; cursor: pointer;
+  }
+  .tab .ic{
+    width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center;
+    flex-shrink:0; opacity:0.9;
+  }
+  .tab .ic svg{ stroke: currentColor; }
+  .tab:hover .ic{ opacity:1; }
+  .tab.active .ic{ opacity:1; }
+  .tab .count{
+    margin-left:auto; font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+    color:#8D95A3; background: rgba(255,255,255,0.08); padding: 2px 7px; border-radius: 10px;
+  }
+  .tab:hover{ background: var(--rail-hover); color:#F2EEE0; transform: translateX(2px); }
+  .tab.active{ background: var(--rail-active-bg); color: var(--rail-active-text); font-weight:600; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .tab.active:hover{ transform: none; }
+  .tab.active .count{ background: rgba(22,32,47,0.18); color: var(--rail-active-text); }
+  [data-theme="dark"] .tab.active .count{ background: rgba(255,255,255,0.15); }
+
+  .rail-spacer{ flex:1; }
+  .rail-foot{ border-top: 1px solid rgba(233,228,214,0.14); padding-top: 14px; }
+  .quota-label{ display:flex; justify-content:space-between; font-size:11px; color:#A9B0BC; margin-bottom:6px; font-family:'IBM Plex Mono',monospace; }
+  .quota-track{ height:6px; background: rgba(255,255,255,0.15); border-radius:3px; overflow:hidden; }
+  .quota-fill{ height:100%; background: var(--gold); border-radius:3px; transition: width .3s ease; }
+  .ghost-btn{
+    margin-top:12px; width:100%; background: rgba(255,255,255,0.05); border:1px solid rgba(233,228,214,0.22);
+    color:#D2D6DF; font-size:11.5px; font-weight:500; padding:8px 10px; border-radius: var(--radius-m);
+    cursor:pointer; transition: all .14s ease;
+  }
+  .ghost-btn:hover{ border-color: rgba(233,228,214,0.5); background: rgba(255,255,255,0.1); color:#fff; transform: translateY(-1px); }
+
+  /* ================= MAIN COLUMN ================= */
+  .main-col{ flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar{
+    height: 56px; flex:0 0 auto; border-bottom: 1px solid var(--line);
+    display: flex; align-items:center; padding: 0 22px; gap: 12px; background: var(--topbar-bg);
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  .search-wrap{ position:relative; width: 270px; }
+  .search-wrap input{
+    width:100%; padding: 7px 12px 7px 32px; font-size:12.5px; border:1px solid var(--line);
+    border-radius: var(--radius-m); background: var(--input-bg); color: var(--ink);
+    transition: all .15s ease;
+  }
+  .search-wrap input:focus{
+    border-color: var(--navy); outline:none; box-shadow: 0 0 0 3px rgba(34, 49, 74, 0.15);
+  }
+  .ui-icon{
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+  .search-wrap .sic{
+    position:absolute; left:10px; top:50%; transform:translateY(-50%);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-faint); pointer-events:none;
+  }
+  .topbar-spacer{ flex:1; }
+  .upload-btn{
+    background: var(--moss); color:#fff; border:none; padding: 8px 16px; border-radius: var(--radius-m);
+    font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+    transition: all .15s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer;
+  }
+  .upload-btn:hover{ opacity:0.95; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+  .upload-btn:active{ transform: translateY(0); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  .topbar-icon-btn{
+    position:relative; background:transparent; border:1px solid transparent; color:var(--ink);
+    width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
+    border-radius: var(--radius-m); cursor:pointer; transition: all .14s ease;
+  }
+  .topbar-icon-btn:hover{ background: var(--topbar-btn-hover); border-color: var(--line); transform: translateY(-1px); }
+  .topbar-icon-btn:active{ transform: translateY(0); }
+  .topbar-icon-btn .ui-icon{ color: var(--ink); stroke: var(--ink); }
+  .topbar-icon-btn:hover .ui-icon{ color: var(--navy); stroke: var(--navy); }
+  [data-theme="dark"] .topbar-icon-btn:hover .ui-icon{ color: #F1F5F9; stroke: #F1F5F9; }
+  .bell-count{
+    position:absolute; top:3px; right:3px; min-width:14px; height:14px; font-size:9px; font-weight:700;
+    background: var(--stamp-red); color:#fff; border-radius:7px; padding: 0 3px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; box-shadow: 0 0 0 2px var(--topbar-bg);
+  }
+  .user-badge{
+    width:36px; height:36px; border-radius: var(--radius-m); display:flex; align-items:center;
+    justify-content:center; color:#fff; font-size:12px; font-weight:700; border: 1px solid rgba(255,255,255,0.25);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.14); cursor:pointer; transition: all .14s ease;
+  }
+  .user-badge:hover{ transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.22); }
+
+  .main-area{ flex:1; overflow-y:auto; padding: 22px 26px 36px 26px; }
+
+  .view-header{ margin-bottom: 18px; }
+  .view-title{ font-family: 'Special Elite', monospace; font-size: 22px; color: var(--navy-deep); letter-spacing: 0.02em; }
+  [data-theme="dark"] .view-title{ color: #F1F5F9; }
+  .view-sub{ font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; display:flex; gap:10px; align-items:center; }
+
+  /* ================= DASHBOARD STATS ================= */
+  .stat-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat-card{
+    background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--radius-l);
+    padding: 14px 16px; box-shadow: var(--shadow-card); transition: all .14s ease;
+  }
+  .stat-card:hover{ transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+  .stat-num{ font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600; color: var(--navy-deep); }
+  [data-theme="dark"] .stat-num{ color: #F1F5F9; }
+  .stat-lbl{ font-size: 11px; text-transform: uppercase; color: var(--ink-soft); letter-spacing: 0.04em; margin-top: 4px; }
+
+  .dropzone{
+    border: 2px dashed var(--dropzone-border); border-radius: var(--radius-l); padding: 24px 20px;
+    text-align:center; background: var(--dropzone-bg); margin-bottom: 22px;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  .dropzone:hover{ border-color: var(--navy); }
+  .dropzone.drag{ background: rgba(85,100,63,0.15) !important; border-color: var(--moss) !important; transform: scale(1.01); }
+  .dropzone .dz-title{ font-weight: 600; font-size: 13.5px; color: var(--navy-deep); margin-bottom: 4px; }
+  [data-theme="dark"] .dropzone .dz-title{ color: #F1F5F9; }
+  .dropzone .dz-sub{ font-size: 12px; color: var(--ink-soft); }
+  .dz-btn{
+    margin-top: 12px; background: var(--navy); color:#fff; border:none;
+    padding: 8px 18px; border-radius: var(--radius-m); font-size: 12.5px; font-weight:600;
+    cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.12); transition: all .14s ease;
+  }
+  .dz-btn:hover{ background: var(--navy-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+  .dz-btn:active{ transform: translateY(0); }
+
+  .section-label{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase;
+    color: var(--ink-soft); letter-spacing: 0.06em; margin: 18px 0 10px 0;
+  }
+
+  /* ================= FILE MANAGER FOLDER SHAPE ================= */
+  .folder-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .folder-card{
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: 0 var(--radius-l) var(--radius-l) var(--radius-l);
+    padding: 16px 16px 14px 16px;
+    position: relative;
+    text-align: left;
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 104px;
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease, background-color .14s ease;
+  }
+  /* Folder tab silhouette on top-left */
+  .folder-card::before{
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -1px;
+    width: 68px;
+    height: 10px;
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-bottom: none;
+    border-radius: var(--radius-s) var(--radius-s) 0 0;
+    transition: all .14s ease;
+  }
+  .folder-card:hover{
+    border-color: var(--navy);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.14);
+    background: var(--card-hover);
+  }
+  .folder-card:hover::before{
+    border-color: var(--navy);
+    background: var(--card-hover);
+  }
+  .folder-card.drag-target{
+    border-color: var(--moss) !important;
+    background: rgba(85,100,63,0.15) !important;
+    transform: scale(1.02);
+  }
+  .folder-card.drag-target::before{
+    border-color: var(--moss) !important;
+    background: rgba(85,100,63,0.15) !important;
+  }
+  .folder-accent-bar{
+    position: absolute;
+    top: -6px;
+    left: 8px;
+    width: 48px;
+    height: 3.5px;
+    border-radius: 2px;
+    z-index: 2;
+  }
+
+  .folder-card-head{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .folder-svg-icon{
+    width: 34px;
+    height: 28px;
+    flex: 0 0 auto;
+    transition: transform .14s ease;
+    filter: drop-shadow(0 1.5px 2px rgba(0,0,0,0.14));
+  }
+  .folder-card:hover .folder-svg-icon{
+    transform: scale(1.08);
+  }
+  .fc-name{
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--navy-deep);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 3px;
+  }
+  [data-theme="dark"] .fc-name{ color: #F1F5F9; }
+  .fc-meta{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .fc-menu{
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    padding: 4px 6px;
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .12s ease;
+  }
+  .fc-menu:hover{
+    background: var(--card-hover);
+    color: var(--ink);
+  }
+
+  /* Breadcrumb */
+  .breadcrumb{
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 14px;
+    color: var(--ink-soft);
+  }
+  .crumb-btn{
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    color: var(--navy);
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    font-size: 12.5px;
+    transition: all .14s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .crumb-btn:hover{
+    background: var(--card-hover);
+    border-color: var(--navy);
+    transform: translateY(-1px);
+  }
+
+  /* ================= LEDGER TABLE ================= */
+  .ledger{
+    background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--radius-l);
+    box-shadow: var(--shadow-card); overflow: hidden;
+  }
+  .ledger-head{
+    display: grid; grid-template-columns: 28px 1fr 70px 100px 120px 80px;
+    padding: 11px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;
+    text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--line); background: rgba(0,0,0,0.02);
+  }
+  .ledger-row{
+    display: grid; grid-template-columns: 28px 1fr 70px 100px 120px 80px;
+    padding: 10px 16px; align-items:center; font-size: 12.5px; border-bottom: 1px dashed var(--line-soft);
+    cursor: pointer; transition: background .12s ease;
+  }
+  .ledger-row:last-child{ border-bottom: none; }
+  .ledger-row:hover{ background: var(--row-hover); }
+  .ledger-row.selected{ background: var(--row-selected); box-shadow: inset 3px 0 0 var(--navy); }
+
+  .file-badge{
+    display:inline-block; padding: 2.5px 6px; border-radius: 4px;
+    font-size:8.5px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#fff; letter-spacing:0.02em;
+  }
+  .file-name-cell{ display:flex; align-items:center; gap:8px; min-width:0; }
+  .file-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+  .file-loc{ font-size:10.5px; color:var(--ink-faint); font-family:'IBM Plex Mono',monospace; }
+  .cell-mono{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
+  .star-btn{
+    background:none; border:none; padding:4px; cursor:pointer; border-radius:4px;
+    display:inline-flex; align-items:center; justify-content:center; color:var(--ink-faint);
+    transition: transform .12s ease, color .12s ease;
+  }
+  .star-btn:hover{ transform: scale(1.18); color: var(--gold); }
+  .star-btn.on{ color: var(--gold); }
+  .row-actions{ display:flex; gap:4px; justify-content:flex-end; opacity:0; transition: opacity .1s; }
+  .ledger-row:hover .row-actions{ opacity:1; }
+  .icon-btn{
+    background: transparent; border: 1px solid transparent; color: var(--ink-soft);
+    padding: 5px 8px; border-radius: var(--radius-s); cursor: pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:4px;
+    transition: all .12s ease;
+  }
+  .icon-btn:hover{ background: var(--card-hover); color: var(--ink); border-color: var(--line); }
+  .icon-btn.danger:hover{ color: var(--stamp-red); border-color: rgba(165,56,44,0.3); background: rgba(165,56,44,0.06); }
+
+  .empty-state{ text-align:center; padding: 46px 20px; color: var(--ink-soft); }
+  .empty-stamp{
+    width:70px; height:70px; margin:0 auto 12px auto; border-radius:50%; border: 3px double var(--ink-faint);
+    display:flex; align-items:center; justify-content:center; font-family:'Special Elite',monospace; font-size: 9.5px;
+    color: var(--ink-faint); letter-spacing:0.03em; transform: rotate(-8deg); text-align:center; line-height:1.3;
+  }
+  .empty-state .es-title{ font-weight:600; color:var(--ink); font-size:13.5px; margin-bottom:3px; }
+  .empty-state .es-sub{ font-size:12px; }
+
+  .activity-list{ display:flex; flex-direction:column; }
+  .activity-row{ display:flex; gap:12px; align-items:baseline; padding: 8px 4px; border-bottom: 1px dashed var(--line-soft); font-size:12.5px; }
+  .activity-row:last-child{ border-bottom:none; }
+  .activity-time{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-faint); width:74px; flex:0 0 auto; }
+
+  /* ---- notifications / user menu popover ---- */
+  .notif-panel{
+    position:absolute; top:58px; right:22px; width:280px; max-height:340px; overflow-y:auto;
+    background: var(--paper-card); border:1px solid var(--line); border-radius: var(--radius-l);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.25); padding:16px; z-index:35;
+  }
+  .notif-item{ padding:9px 4px; border-bottom:1px dashed var(--line-soft); font-size:12px; }
+  .notif-item:last-child{ border-bottom:none; }
+  .notif-item.unread{ font-weight:600; }
+  .notif-empty{ font-size:12px; color:var(--ink-soft); text-align:center; padding:16px 0; }
+  .plain-btn{
+    width:100%; padding:8px 12px; border:1px solid var(--line); border-radius: var(--radius-m);
+    background: var(--input-bg); color: var(--ink); font-size:12px; font-weight:500; margin-top:6px;
+    cursor:pointer; transition: all .14s ease;
+  }
+  .plain-btn:hover{ background: var(--card-hover); transform: translateY(-1px); }
+
+  /* ================= MINIMAL DETAIL PANEL ================= */
+  /* ================= MINIMAL DETAIL PANEL ================= */
+  .detail-panel{
+    position: absolute;
+    top: 66px;
+    right: 20px;
+    width: 260px;
+    max-height: calc(100vh - 86px);
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 13px 15px 14px 15px;
+    overflow-y: auto;
+    z-index: 25;
+    animation: fadeIn .14s ease both;
+  }
+  .dp-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:6px; }
+  .dp-close{
+    background:none; border:none; font-size:13px; color:var(--ink-soft); cursor:pointer;
+    padding:3px 6px; border-radius: var(--radius-s); line-height:1;
+  }
+  .dp-close:hover{ background:var(--card-hover); color:var(--ink); }
+  .dp-name-input{
+    flex:1; min-width:0; font-size:13px; font-weight:600; border:none; background:transparent;
+    padding:3px 4px; border-bottom: 1px solid transparent; color:var(--ink);
+    border-radius: var(--radius-s);
+  }
+  .dp-name-input:hover, .dp-name-input:focus{ border-bottom-color: var(--line); background: var(--input-bg); }
+
+  .dp-meta-row{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
+    margin-bottom: 8px; display:flex; flex-wrap:wrap; gap:5px; align-items:center;
+  }
+
+  .dp-divider{ height:1px; background:var(--line); margin: 9px 0; }
+
+  .dp-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; font-size:11.5px; }
+  .dp-row select{
+    border:1px solid var(--line); border-radius: var(--radius-s); padding:3px 6px;
+    font-size:11px; background: var(--input-bg); color: var(--ink); max-width: 140px;
+  }
+
+  .toggle{ position:relative; width:28px; height:16px; border-radius:8px; background: var(--line); border:none; flex:0 0 auto; cursor:pointer; }
+  .toggle.on{ background: var(--moss); }
+  .toggle .knob{ position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:#fff; transition: left .12s ease; }
+  .toggle.on .knob{ left:14px; }
+
+  /* Sleek minimal share card */
+  .share-card{
+    background: var(--paper-card-subtle); border:1px solid var(--line); border-radius: var(--radius-m);
+    padding:8px 10px; margin: 6px 0;
+  }
+  .share-url-box{ display:flex; gap:5px; align-items:center; margin-top:4px; }
+  .share-url-box input{
+    flex:1; min-width:0; font-family:'IBM Plex Mono',monospace; font-size:10px; padding:4px 6px;
+    border:1px solid var(--line); border-radius: var(--radius-s); background: var(--input-bg); color:var(--ink);
+  }
+  .copy-btn{
+    background: var(--navy); color:#fff; border:none; padding:5px 9px; border-radius: var(--radius-s);
+    font-size:10px; font-weight:600; cursor:pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: all .14s ease; flex-shrink:0;
+  }
+  .copy-btn:hover{ background:var(--navy-deep); transform: translateY(-1px); }
+
+  .btn-download{
+    display:flex; align-items:center; justify-content:center; gap:5px; width:100%;
+    background: var(--navy); color:#fff; text-decoration:none; padding:7px 10px; border-radius: var(--radius-m);
+    font-weight:600; font-size:11px; margin-top:7px; text-align:center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12); transition: all .14s ease;
+  }
+  .btn-download:hover{ background:var(--navy-deep); transform: translateY(-1px); }
+
+  .dp-actions{ display:flex; gap:5px; margin-top:8px; }
+  .dp-actions button{
+    flex:1; padding:5px 8px; border-radius: var(--radius-s); font-size:11px; font-weight:600;
+    border:1px solid var(--line); background: var(--input-bg); color:var(--ink); cursor:pointer;
+    transition: all .14s ease;
+  }
+  .dp-actions button:hover{ transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+  .dp-actions .trash-btn{ color: var(--stamp-red); border-color: rgba(165,56,44,0.3); }
+  .dp-actions .trash-btn:hover{ background: rgba(165,56,44,0.06); }
+  .dp-actions .restore-btn{ color: var(--moss); border-color: rgba(85,100,63,0.3); }
+
+  /* ================= MODAL ================= */
+  .modal-overlay{ position:absolute; inset:0; background: var(--overlay-bg); display:flex; align-items:center; justify-content:center; z-index:40; backdrop-filter: blur(2px); }
+  .modal-card{
+    width: 320px; background: var(--paper-card); border:1px solid var(--line);
+    border-radius: var(--radius-l); padding: 22px; box-shadow: 0 16px 40px rgba(0,0,0,0.28);
+  }
+  .modal-title{ font-family:'Special Elite',monospace; font-size:16px; color:var(--navy-deep); margin-bottom:14px; }
+  [data-theme="dark"] .modal-title{ color: #F1F5F9; }
+  .modal-card input[type=text]{
+    width:100%; padding:9px 12px; border:1px solid var(--line); border-radius: var(--radius-m);
+    font-size:13px; margin-bottom:14px; background: var(--input-bg); color: var(--ink);
+  }
+  .modal-card select{
+    width:100%; padding:9px 12px; border:1px solid var(--line); border-radius: var(--radius-m);
+    font-size:13px; margin-bottom:14px; background: var(--input-bg); color: var(--ink);
+  }
+  .swatches{ display:flex; gap:8px; margin-bottom:18px; }
+  .swatch{ width:24px; height:24px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition: transform .12s ease; }
+  .swatch:hover{ transform: scale(1.15); }
+  .swatch.selected{ border-color: var(--ink); transform: scale(1.12); }
+  .modal-actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .modal-actions button{
+    padding:8px 16px; border-radius: var(--radius-m); font-size:12px; font-weight:600;
+    border:1px solid var(--line); background: var(--input-bg); color: var(--ink); cursor:pointer;
+    transition: all .14s ease;
+  }
+  .modal-actions button:hover{ transform: translateY(-1px); }
+  .modal-actions .primary{ background: var(--navy); color:#fff; border:none; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+  .modal-actions .primary:hover{ background: var(--navy-deep); }
+
+  /* ================= TOAST ================= */
+  .toast{
+    position:absolute; left:22px; bottom:20px; background: var(--navy-deep); color:#F2EEE0;
+    padding: 10px 16px; border-radius: var(--radius-m); font-size:12px; font-weight:500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index:50; opacity:1;
+    transition: opacity .15s ease, transform .15s ease; border: 1px solid rgba(255,255,255,0.1);
+  }
+  .toast.hidden{ opacity:0; transform: translateY(6px); pointer-events:none; }
+
+  .loading-wrap{ display:flex; align-items:center; justify-content:center; height:100%; color:var(--ink-soft); font-size:13px; flex-direction:column; gap:10px; }
+  .spinner{ width:22px; height:22px; border-radius:50%; border:2.5px solid var(--line); border-top-color: var(--navy); }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  .spinner{ animation: spin .5s linear infinite; }
+
+  .fade-in{ animation: fadeIn .12s ease both; }
+  @keyframes fadeIn{ from{ opacity:0; transform: translateY(2px); } to{ opacity:1; transform: translateY(0); } }
+
+  @media (max-width: 720px){
+    .rail{ width: 62px; padding: 14px 8px; }
+    .brand-sub, .tab span.label, .tab .count{ display:none; }
+    .tab{ justify-content:center; }
+    .stat-row{ grid-template-columns: repeat(2,1fr); }
+    .ledger-head, .ledger-row{ grid-template-columns: 28px 1fr 70px 0px 0px 50px; }
+    .ledger-head > *:nth-child(4), .ledger-head > *:nth-child(5),
+    .ledger-row .cell-mono.hide-sm{ display:none; }
+    .detail-panel{ width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cbms-root" id="cbmsRoot">
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="spinner"></div>
+    <div>Opening the registry…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('cbmsRoot');
+  const BASE_USED_BYTES = 2.15 * 1024 * 1024 * 1024;
+  const QUOTA_BYTES = 15 * 1024 * 1024 * 1024;
+
+  const FOLDER_COLORS = [
+    {id:'yellow', hex:'#F5A623'}, {id:'moss', hex:'#55643F'}, {id:'navy', hex:'#22314A'}, {id:'gold', hex:'#A9791E'}, {id:'red', hex:'#A5382C'}
+  ];
+  const colorHex = id => (FOLDER_COLORS.find(c=>c.id===id)||FOLDER_COLORS[0]).hex;
+
+  const TYPE_COLORS = {
+    pdf:'#A5382C', doc:'#22314A', docx:'#22314A', xls:'#3C6B3F', xlsx:'#3C6B3F',
+    ppt:'#B5601F', pptx:'#B5601F', txt:'#6E6353', md:'#6E6353', csv:'#3C6B3F',
+    json:'#5B4A8A', png:'#8A5AA8', jpg:'#8A5AA8', jpeg:'#8A5AA8', zip:'#4A4A4A', default:'#7A7062'
+  };
+
+  const ROLE_META = {
+    admin:{label:'Admin', color:'#A5382C'},
+    staff:{label:'Staff', color:'#22314A'},
+    user:{label:'User', color:'#55643F'}
+  };
+
+  const DEMO_ACCOUNTS = [
+    { name: 'Priya Admin', email: 'admin@demo.io', role: 'admin' },
+    { name: 'Ravi Staff', email: 'staff@demo.io', role: 'staff' },
+    { name: 'Guest User', email: 'user@demo.io', role: 'user' }
+  ];
+
+  function extOf(name){ const m = /\.([a-zA-Z0-9]+)$/.exec(name || ''); return m ? m[1].toLowerCase() : 'file'; }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmtBytes(b){
+    b = Number(b) || 0;
+    if(b < 1024) return b + ' B';
+    if(b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+    if(b < 1024*1024*1024) return (b/(1024*1024)).toFixed(1) + ' MB';
+    return (b/(1024*1024*1024)).toFixed(2) + ' GB';
+  }
+  function fmtDate(iso){
+    if(!iso) return '';
+    const d = new Date(iso); const now = new Date();
+    if(isNaN(d.getTime())) return '';
+    const sameDay = d.toDateString() === now.toDateString();
+    if(sameDay) return 'Today ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    return d.toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'});
+  }
+  function initials(name){
+    const parts = String(name||'').trim().split(/\s+/);
+    return ((parts[0]?parts[0][0]:'') + (parts[1]?parts[1][0]:'')).toUpperCase() || 'U';
+  }
+
+  // ---------------- REST API Helper ----------------
+  async function api(path, options = {}) {
+    options.credentials = 'include';
+    options.headers = options.headers || {};
+    if (options.body && !(options.body instanceof FormData)) {
+      options.headers['Content-Type'] = 'application/json';
+      if (typeof options.body === 'object') {
+        options.body = JSON.stringify(options.body);
+      }
+    }
+    const res = await fetch(path, options);
+    const ct = res.headers.get('content-type') || '';
+    let data = null;
+    if (ct.includes('application/json')) {
+      data = await res.json().catch(() => null);
+    }
+    if (!res.ok) {
+      const msg = (data && data.error) ? data.error : ('Request failed (' + res.status + ')');
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  // ---------------- state ----------------
+  let state = {
+    currentUser: null,
+    folders: [],
+    files: [],
+    activity: [],
+    users: [],
+    notifications: [],
+    view: 'dashboard',
+    currentFolder: null,
+    search: '',
+    sortBy: 'date-desc',
+    selectedFileId: null,
+    modal: null,
+    dragOver: false,
+    authError: '',
+    authTab: 'signin',
+    notifOpen: false,
+    userMenuOpen: false,
+    stats: null,
+    reportsSummary: null
+  };
+
+  function currentUser(){
+    return state.currentUser;
+  }
+
+  async function loadWorkspace(){
+    try {
+      const meRes = await api('/api/auth/me');
+      if (meRes && meRes.user) {
+        state.currentUser = meRes.user;
+        await refreshWorkspaceData();
+        return true;
+      }
+    } catch(e) {
+      console.warn('No active session:', e);
+    }
+    state.currentUser = null;
+    return false;
+  }
+
+  async function refreshWorkspaceData(){
+    if(!state.currentUser) return;
+    try {
+      const [foldersRes, filesRes, trashRes, notifRes, statsRes] = await Promise.all([
+        api('/api/folders').catch(()=>({folders:[]})),
+        api('/api/files').catch(()=>({files:[]})),
+        api('/api/files/trash').catch(()=>({files:[]})),
+        api('/api/notifications').catch(()=>({notifications:[]})),
+        api('/api/dashboard/stats').catch(()=>null)
+      ]);
+
+      state.folders = (foldersRes && foldersRes.folders) || [];
+      const activeFiles = (filesRes && filesRes.files) || [];
+      const trashedFiles = (trashRes && trashRes.files) || [];
+      state.files = [...activeFiles, ...trashedFiles];
+      state.notifications = (notifRes && notifRes.notifications) || [];
+
+      if (statsRes) {
+        state.stats = statsRes;
+        state.activity = statsRes.activity || [];
+      }
+
+      if (state.currentUser.role === 'admin') {
+        const usersRes = await api('/api/users').catch(()=>({users:[]}));
+        state.users = (usersRes && usersRes.users) || [];
+      }
+
+      if (state.currentUser.role === 'admin' || state.currentUser.role === 'staff') {
+        const repRes = await api('/api/reports/summary').catch(()=>null);
+        state.reportsSummary = repRes;
+      }
+    } catch(err) {
+      console.error('refreshWorkspaceData error:', err);
+    }
+  }
+
+  // ---------------- derived queries ----------------
+  function activeFilesList(){
+    return state.files.filter(f => !f.trashed);
+  }
+
+  function visibleFilesList(list){
+    const cu = currentUser();
+    if(!cu) return [];
+    if(cu.role === 'user'){
+      return list.filter(f => f.ownerId === cu.id || (f.shared && f.shared.enabled));
+    }
+    return list;
+  }
+
+  function visibleTrashList(){
+    const cu = currentUser();
+    const trashed = state.files.filter(f => f.trashed);
+    if(cu && cu.role === 'user'){
+      return trashed.filter(f => f.ownerId === cu.id);
+    }
+    return trashed;
+  }
+
+  function visibleActivityList(){
+    const cu = currentUser();
+    if(!cu) return [];
+    if(cu.role === 'admin' || cu.role === 'staff') return state.activity;
+    return state.activity.filter(a => a.userId === cu.id);
+  }
+
+  function usedBytes(){
+    const cu = currentUser();
+    if(!cu) return 0;
+    if(cu.role === 'user'){
+      return activeFilesList().filter(f => f.ownerId === cu.id).reduce((s,f) => s + (f.sizeBytes||0), 0);
+    }
+    if(state.stats && typeof state.stats.storageBytes === 'number'){
+      return BASE_USED_BYTES + state.stats.storageBytes;
+    }
+    return BASE_USED_BYTES + activeFilesList().reduce((s,f) => s + (f.sizeBytes||0), 0);
+  }
+
+  function folderCount(id){
+    return activeFilesList().filter(f => String(f.folderId) === String(id)).length;
+  }
+
+  function sortFiles(list){
+    const arr = list.slice();
+    switch(state.sortBy){
+      case 'name-asc': arr.sort((a,b)=>a.name.localeCompare(b.name)); break;
+      case 'name-desc': arr.sort((a,b)=>b.name.localeCompare(a.name)); break;
+      case 'size-desc': arr.sort((a,b)=>(b.sizeBytes||0)-(a.sizeBytes||0)); break;
+      case 'size-asc': arr.sort((a,b)=>(a.sizeBytes||0)-(b.sizeBytes||0)); break;
+      case 'date-asc': arr.sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)); break;
+      default: arr.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    }
+    return arr;
+  }
+
+  function matchesSearch(f){
+    if(!state.search.trim()) return true;
+    return f.name.toLowerCase().includes(state.search.trim().toLowerCase());
+  }
+
+  /* ================= SLEEK PROFESSIONAL SVG SYMBOLS ================= */
+  function uiIcon(name, size = 16, className = ''){
+    const s = size;
+    const cls = className ? `class="ui-icon ${className}"` : 'class="ui-icon"';
+    switch(name){
+      case 'moon':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+      case 'sun':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+      case 'bell':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+      case 'search':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+      case 'upload':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+      case 'download':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+      case 'link':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+      case 'trash':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+      case 'star':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      case 'star-filled':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="var(--gold)" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      case 'restore':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`;
+      case 'x':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      case 'dots':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>`;
+      case 'plus':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+      case 'sync':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>`;
+      case 'dashboard':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>`;
+      case 'files':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>`;
+      case 'folders':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+      case 'shared':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+      case 'reports':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`;
+      case 'users':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+      case 'logout':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`;
+      case 'check':
+        return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      default:
+        return '';
+    }
+  }
+
+  // ---------------- theme switcher ----------------
+  function toggleTheme(){
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+  }
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('cbms_theme', theme); } catch(e){}
+    const isDark = theme === 'dark';
+    const iconSvg = uiIcon(isDark ? 'sun' : 'moon', 18);
+    const tIcon = document.getElementById('themeIcon');
+    if(tIcon) tIcon.innerHTML = iconSvg;
+    const loginToggle = document.getElementById('themeToggleLoginBtn');
+    if(loginToggle) loginToggle.innerHTML = iconSvg;
+    const btn = document.getElementById('themeToggleBtn');
+    if(btn) btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+    const menuThemeText = document.getElementById('menuThemeText');
+    if(menuThemeText) menuThemeText.innerHTML = `${uiIcon(isDark ? 'sun' : 'moon', 13)} ${isDark ? 'Light mode' : 'Dark mode'}`;
+  }
+
+  // ---------------- render ----------------
+  function render(){
+    root.innerHTML = '';
+    const cu = currentUser();
+    if(!cu){
+      root.insertAdjacentHTML('beforeend', loginScreenHtml());
+      root.insertAdjacentHTML('beforeend', '<div class="toast hidden" id="toastEl"></div>');
+      bindEvents();
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;width:100%;height:100%;';
+    wrap.innerHTML = railHtml() + mainColHtml();
+    root.appendChild(wrap);
+
+    if(state.selectedFileId) root.insertAdjacentHTML('beforeend', detailPanelHtml());
+    if(state.modal) root.insertAdjacentHTML('beforeend', modalHtml());
+    if(state.notifOpen) root.insertAdjacentHTML('beforeend', notifPanelHtml());
+    if(state.userMenuOpen) root.insertAdjacentHTML('beforeend', userMenuHtml());
+    root.insertAdjacentHTML('beforeend', '<div class="toast hidden" id="toastEl"></div>');
+
+    bindEvents();
+
+    if(state.notifOpen || state.userMenuOpen){
+      const mainAreaEl = document.getElementById('mainArea');
+      if(mainAreaEl){
+        mainAreaEl.addEventListener('click', ()=>{ state.notifOpen=false; state.userMenuOpen=false; render(); }, {once:true});
+      }
+    }
+  }
+
+  function loginScreenHtml(){
+    const isSignUp = state.authTab === 'register';
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return `
+    <div class="login-screen">
+      <div style="position:absolute;top:20px;right:24px;">
+        <button class="topbar-icon-btn" id="themeToggleLoginBtn" title="${isDark ? 'Switch to light mode' : 'Switch to dark mode'}" style="background:var(--paper-card);border:1px solid var(--line);box-shadow:var(--shadow-card);">
+          ${uiIcon(isDark ? 'sun' : 'moon', 18)}
+        </button>
+      </div>
+      <div class="login-card">
+        <div class="brand-mark" style="color:var(--navy-deep);text-align:center;margin-bottom:4px;">CLOUD‑BASED<br>MANAGEMENT SYSTEM</div>
+        <div class="brand-sub" style="text-align:center;color:var(--ink-soft);margin-bottom:16px;">Document Registry Access</div>
+        
+        <div class="login-tabs">
+          <button class="login-tab ${!isSignUp?'active':''}" data-auth-tab="signin">Sign in</button>
+          <button class="login-tab ${isSignUp?'active':''}" data-auth-tab="register">Sign up</button>
+        </div>
+
+        ${state.authError ? `<div class="login-error">${escapeHtml(state.authError)}</div>` : ''}
+
+        ${!isSignUp ? `
+        <form id="signinForm">
+          <label class="login-field">Email<input type="email" id="siEmail" value="admin@demo.io" required /></label>
+          <label class="login-field">Password<input type="password" id="siPassword" value="demo123" required /></label>
+          <button type="submit" class="dz-btn" style="width:100%;margin-top:4px;">Sign in</button>
+          <div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--ink-soft);">
+            Don't have an account? <button type="button" data-auth-tab="register" style="background:none;border:none;color:var(--navy);font-weight:600;cursor:pointer;padding:0;font-size:11.5px;text-decoration:underline;">Sign up</button>
+          </div>
+        </form>
+        ` : `
+        <form id="registerForm">
+          <label class="login-field">Full Name<input type="text" id="regName" placeholder="e.g. Alex Morgan" required /></label>
+          <label class="login-field">Email<input type="email" id="regEmail" placeholder="alex@demo.io" required /></label>
+          <label class="login-field">Password<input type="password" id="regPassword" minlength="4" placeholder="At least 4 characters" required /></label>
+          <button type="submit" class="dz-btn" style="width:100%;margin-top:4px;background:var(--moss);">Create Account & Sign in</button>
+          <div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--ink-soft);">
+            Already have an account? <button type="button" data-auth-tab="signin" style="background:none;border:none;color:var(--navy);font-weight:600;cursor:pointer;padding:0;font-size:11.5px;text-decoration:underline;">Sign in</button>
+          </div>
+        </form>
+        `}
+
+        <div class="section-label" style="margin-top:20px;">Quick demo access</div>
+        <div class="demo-accounts">
+          ${DEMO_ACCOUNTS.map(u=>`
+            <button class="demo-chip" data-quick-email="${u.email}">
+              <span class="role-pill" style="background:${ROLE_META[u.role].color}">${ROLE_META[u.role].label}</span>
+              <span style="font-weight:500;">${escapeHtml(u.name)}</span>
+              <span style="margin-left:auto;color:var(--ink-faint);font-size:10px;">${u.email}</span>
+            </button>`).join('')}
+        </div>
+        <div class="login-foot" style="margin-top:14px;">Demo password for all accounts: <code>demo123</code></div>
+      </div>
+    </div>`;
+  }
+
+  function railHtml(){
+    const cu = currentUser();
+    const myFiles = visibleFilesList(activeFilesList());
+    const tabs = [
+      ['dashboard','Dashboard','dashboard', null],
+      ['files', cu.role==='user' ? 'My Files' : 'All Files', 'files', myFiles.length],
+      ['folders','Folders','folders', state.folders.length],
+      ['starred','Starred','star', myFiles.filter(f=>f.starred).length],
+      ['shared','Shared','shared', myFiles.filter(f=>f.shared && f.shared.enabled).length],
+      ['trash','Trash','trash', visibleTrashList().length]
+    ];
+    if(cu.role==='admin' || cu.role==='staff'){ tabs.push(['reports','Reports','reports', null]); }
+    if(cu.role==='admin'){ tabs.push(['users','Users','users', state.users.length]); }
+
+    const pct = Math.min(100, (usedBytes()/QUOTA_BYTES)*100);
+    return `
+    <aside class="rail">
+      <div class="brand">
+        <div class="brand-mark">CLOUD‑BASED<br>MANAGEMENT SYSTEM</div>
+        <div class="brand-sub">Document Registry</div>
+      </div>
+      <nav class="tabs">
+        ${tabs.map(([id,label,ic,count])=>`
+          <button class="tab ${state.view===id?'active':''}" data-view="${id}">
+            <span class="ic">${uiIcon(ic, 16)}</span><span class="label">${label}</span>
+            ${count!==null?`<span class="count">${count}</span>`:''}
+          </button>`).join('')}
+      </nav>
+      <div class="rail-spacer"></div>
+      <div class="rail-foot">
+        <div class="quota-label"><span>${cu.role==='user'?'Your storage':'Total storage'}</span><span>${fmtBytes(usedBytes())}${cu.role!=='user'?' / 15 GB':''}</span></div>
+        <div class="quota-track"><div class="quota-fill" style="width:${pct}%"></div></div>
+        <button class="ghost-btn" id="syncBtn" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+          ${uiIcon('sync', 13)} Sync workspace
+        </button>
+      </div>
+    </aside>`;
+  }
+
+  function mainColHtml(){
+    const cu = currentUser();
+    const unread = state.notifications.filter(n=> n.userId===cu.id || (n.targetRole==='admin' && cu.role==='admin')).filter(n=>!n.read).length;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return `
+    <div class="main-col">
+      <header class="topbar">
+        <div class="search-wrap">
+          <span class="sic">${uiIcon('search', 14)}</span>
+          <input id="searchInput" placeholder="Search files..." value="${escapeHtml(state.search)}" />
+        </div>
+        <div class="topbar-spacer"></div>
+        <button class="upload-btn" id="uploadBtnTop">${uiIcon('upload', 14)} Upload</button>
+        <input type="file" id="fileInput" multiple />
+        <button class="topbar-icon-btn" id="themeToggleBtn" title="${isDark ? 'Switch to light mode' : 'Switch to dark mode'}" aria-label="Toggle dark mode">
+          <span id="themeIcon">${uiIcon(isDark ? 'sun' : 'moon', 18)}</span>
+        </button>
+        <button class="topbar-icon-btn" id="bellBtn" title="Notifications" aria-label="Notifications">
+          ${uiIcon('bell', 18)}
+          ${unread>0?`<span class="bell-count">${unread>9?'9+':unread}</span>`:''}
+        </button>
+        <button class="user-badge" id="userMenuBtn" style="background:${ROLE_META[cu.role].color}" title="${escapeHtml(cu.name)}">${initials(cu.name)}</button>
+      </header>
+      <main class="main-area" id="mainArea">
+        ${viewHtml()}
+      </main>
+    </div>`;
+  }
+
+  function viewHtml(){
+    const cu = currentUser();
+    switch(state.view){
+      case 'dashboard': return dashboardHtml();
+      case 'folders': return foldersHtml();
+      case 'files': return filesHtml();
+      case 'starred': return fileListView(visibleFilesList(activeFilesList()).filter(f=>f.starred), 'Starred', 'Files you have marked for quick access.');
+      case 'shared': return fileListView(visibleFilesList(activeFilesList()).filter(f=>f.shared && f.shared.enabled), 'Shared', 'Files with an active share link.');
+      case 'trash': return trashHtml();
+      case 'reports': return (cu.role==='admin'||cu.role==='staff') ? reportsHtml() : dashboardHtml();
+      case 'users': return cu.role==='admin' ? usersHtml() : dashboardHtml();
+      default: return '';
+    }
+  }
+
+  function dashboardHtml(){
+    const cu = currentUser();
+    const files = visibleFilesList(activeFilesList());
+    const starred = files.filter(f=>f.starred).length;
+    const shared = files.filter(f=>f.shared && f.shared.enabled).length;
+    const act = visibleActivityList();
+
+    return `
+      <div class="fade-in">
+        <div class="view-header">
+          <div class="view-title">Dashboard</div>
+          <div class="view-sub">
+            <span>${new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'})}</span>
+            <span>· Signed in as ${escapeHtml(cu.name)}</span>
+            <span class="role-pill" style="background:${ROLE_META[cu.role].color}">${ROLE_META[cu.role].label}</span>
+          </div>
+        </div>
+        ${cu.role==='admin' ? `
+        <div style="margin-bottom:16px;">
+          <button class="upload-btn" id="dashAddAccountBtn" style="background:var(--navy);">${uiIcon('plus', 14)} Add account</button>
+        </div>` : ''}
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-num">${files.length}</div><div class="stat-lbl">${cu.role==='user'?'Your files':'Files on file'}</div></div>
+          <div class="stat-card"><div class="stat-num">${state.folders.length}</div><div class="stat-lbl">Folders</div></div>
+          <div class="stat-card"><div class="stat-num">${starred}</div><div class="stat-lbl">Starred</div></div>
+          <div class="stat-card"><div class="stat-num">${shared}</div><div class="stat-lbl">Shared</div></div>
+        </div>
+        ${dropzoneHtml()}
+        <div class="section-label">Folders</div>
+        <div class="folder-grid">${state.folders.map(folderCardHtml).join('') || '<div style="color:var(--ink-soft);font-size:12.5px;">No folders yet.</div>'}</div>
+        <div class="section-label">${cu.role==='user'?'Your recent activity':'Recent activity'}</div>
+        <div class="activity-list">
+          ${act.length ? act.map(a=>`
+            <div class="activity-row">
+              <span class="activity-time">${fmtDate(a.at)}</span>
+              <span>${escapeHtml(a.message)}</span>
+            </div>`).join('') : `<div style="color:var(--ink-soft);font-size:12.5px;">${cu.role==='user'?'You have not stored any files yet — upload a file to get started.':'Nothing filed yet — upload something to get started.'}</div>`}
+        </div>
+      </div>`;
+  }
+
+  function dropzoneHtml(){
+    return `
+      <div class="dropzone ${state.dragOver?'drag':''}" id="dropzone">
+        <div style="margin-bottom:8px;color:var(--ink-soft);">${uiIcon('upload', 26)}</div>
+        <div class="dz-title">Drop files here to file into the registry</div>
+        <div class="dz-sub">PDFs, Word docs, spreadsheets, slides, code, or images up to 25 MB</div>
+        <button class="dz-btn" id="dzBrowseBtn">Browse computer</button>
+      </div>`;
+  }
+
+  /* ================= REAL FOLDER CARD COMPONENT ================= */
+  function folderIconSvg(colorId, size = 32){
+    const h = Math.round(size * 26 / 32);
+    const gid = 'fldGrad_' + (colorId || 'def') + '_' + size;
+    let backColor = '#F5A623';
+    let gradTop = '#FFD54F';
+    let gradBottom = '#FFB300';
+    let lineHighlight = '#FFF7D6';
+
+    if(colorId === 'navy'){
+      backColor = '#16202F'; gradTop = '#2E4162'; gradBottom = '#1F2C43'; lineHighlight = '#465E87';
+    } else if(colorId === 'moss'){
+      backColor = '#3E4B2D'; gradTop = '#6B7E51'; gradBottom = '#4F5E3B'; lineHighlight = '#8A9E6E';
+    } else if(colorId === 'red'){
+      backColor = '#80261C'; gradTop = '#B84335'; gradBottom = '#963124'; lineHighlight = '#D66557';
+    } else if(colorId === 'gold'){
+      backColor = '#855E14'; gradTop = '#BD8B2B'; gradBottom = '#9E7019'; lineHighlight = '#D8A748';
+    }
+
+    return `
+      <svg class="folder-svg-icon" viewBox="0 0 34 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${h}px;display:inline-block;vertical-align:middle;flex-shrink:0;">
+        <!-- Back Tab and Folder Body -->
+        <path d="M2.5 5.5C2.5 4.39543 3.39543 3.5 4.5 3.5H12C12.7 3.5 13.4 3.8 13.9 4.3L15.6 6C16.1 6.5 16.8 6.8 17.5 6.8H30.5C31.6046 6.8 32.5 7.69543 32.5 8.8V23C32.5 24.1046 31.6046 25 30.5 25H4.5C3.39543 25 2.5 24.1046 2.5 23V5.5Z" fill="${backColor}"/>
+        <!-- White Paper Sheet Peek Inside -->
+        <rect x="5.5" y="6" width="23" height="6.5" rx="1.5" fill="#FFFFFF"/>
+        <rect x="7.5" y="8" width="11" height="1.4" rx="0.7" fill="#E2E8F0"/>
+        <!-- Front Flap Pocket -->
+        <rect x="2.5" y="9" width="30" height="16" rx="3" fill="url(#${gid})"/>
+        <!-- Front Flap Top Subtle Highlight Line -->
+        <path d="M4.5 9.7H30.5" stroke="${lineHighlight}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>
+        <defs>
+          <linearGradient id="${gid}" x1="17.5" y1="9" x2="17.5" y2="25" gradientUnits="userSpaceOnUse">
+            <stop stop-color="${gradTop}"/>
+            <stop offset="1" stop-color="${gradBottom}"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+  }
+
+  function folderCardHtml(f){
+    const color = colorHex(f.color);
+    const count = folderCount(f.id);
+    return `
+      <div class="folder-card" data-open-folder="${f.id}" tabindex="0" role="button" title="Open ${escapeHtml(f.name)}">
+        <div class="folder-accent-bar" style="background:${color};"></div>
+        <div class="folder-card-head">
+          ${folderIconSvg(f.color, 34)}
+          <button class="fc-menu" data-folder-menu="${f.id}" title="Folder options" onclick="event.stopPropagation();">${uiIcon('dots', 15)}</button>
+        </div>
+        <div class="fc-name">${escapeHtml(f.name)}</div>
+        <div class="fc-meta">${count} ${count===1?'file':'files'}</div>
+      </div>`;
+  }
+
+  function foldersHtml(){
+    return `
+      <div class="fade-in">
+        <div class="view-header">
+          <div class="view-title">Folders</div>
+          <div class="view-sub">Organize files into folders, like tabs in a filing drawer.</div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <button class="upload-btn" id="newFolderBtn" style="background:var(--navy);">${uiIcon('plus', 14)} New folder</button>
+        </div>
+        <div class="folder-grid">${state.folders.map(folderCardHtml).join('') || emptyStateHtml('No folders yet', 'Create one to start organizing your files.')}</div>
+      </div>`;
+  }
+
+  /* ================= FILE MANAGER FILE LIST & FOLDER BROWSER ================= */
+  function filesHtml(){
+    const folder = state.currentFolder ? state.folders.find(f=>String(f.id)===String(state.currentFolder)) : null;
+    let list = activeFilesList().filter(f => state.currentFolder ? String(f.folderId)===String(state.currentFolder) : true);
+    list = visibleFilesList(list);
+    list = list.filter(matchesSearch);
+    list = sortFiles(list);
+
+    const cu = currentUser();
+    const folderTitle = folder ? folder.name : (cu.role==='user' ? 'My Files' : 'All Files');
+
+    const breadcrumb = folder ? `
+      <div class="breadcrumb" style="display:inline-flex;align-items:center;gap:6px;">
+        <button class="crumb-btn" data-open-folder="" style="display:inline-flex;align-items:center;gap:5px;">
+          ${folderIconSvg('yellow', 18)} All Files
+        </button>
+        <span style="color:var(--ink-faint);">/</span>
+        <span style="font-weight:600;color:var(--ink);">${escapeHtml(folder.name)}</span>
+      </div>` : '';
+
+    return `
+      <div class="fade-in">
+        <div class="view-header">
+          <div class="view-title">${escapeHtml(folderTitle)}</div>
+          <div class="view-sub">
+            ${list.length} file${list.length===1?'':'s'}
+            ${folder ? `· inside folder "${escapeHtml(folder.name)}"` : ''}
+            ${state.search ? `· matching "${escapeHtml(state.search)}"` : ''}
+          </div>
+        </div>
+
+        ${breadcrumb}
+
+        <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
+          <select id="sortSelect" style="border:1px solid var(--line);border-radius:var(--radius-m);padding:7px 12px;font-size:12.5px;background:var(--input-bg);color:var(--ink);cursor:pointer;outline:none;">
+            ${sortOptionsHtml()}
+          </select>
+          ${folder ? `
+            <button class="upload-btn" id="uploadToFolderBtn" style="background:var(--navy);">
+              ${uiIcon('upload', 14)} Upload to this folder
+            </button>
+            <button class="icon-btn" data-folder-menu="${folder.id}" title="Folder settings" style="border:1px solid var(--line);padding:7px 12px;border-radius:var(--radius-m);background:var(--input-bg);color:var(--ink);display:inline-flex;align-items:center;gap:6px;">
+              ${uiIcon('dots', 14)} Folder options
+            </button>
+          ` : `
+            <button class="upload-btn" id="newFolderBtn2" style="background:var(--navy);">${uiIcon('plus', 14)} New folder</button>
+          `}
+        </div>
+
+        ${!state.search ? `
+          <div class="dropzone ${state.dragOver?'drag':''}" id="dropzone" style="margin-bottom:18px;">
+            <div style="margin-bottom:8px;color:var(--ink-soft);">${uiIcon('upload', 26)}</div>
+            <div class="dz-title">${folder ? `Drop files here to file directly into "${escapeHtml(folder.name)}"` : 'Drop files here to file into the registry'}</div>
+            <div class="dz-sub">PDFs, Word docs, spreadsheets, slides, code, or images up to 25 MB</div>
+            <button class="dz-btn" id="dzBrowseBtn">Browse computer</button>
+          </div>
+        ` : ''}
+
+        ${fileTable(list)}
+      </div>`;
+  }
+
+  function sortOptionsHtml(){
+    const opts = [
+      ['date-desc','Newest first'], ['date-asc','Oldest first'],
+      ['name-asc','Name A–Z'], ['name-desc','Name Z–A'],
+      ['size-desc','Largest first'], ['size-asc','Smallest first']
+    ];
+    return opts.map(([v,l])=>`<option value="${v}" ${state.sortBy===v?'selected':''}>${l}</option>`).join('');
+  }
+
+  function fileListView(list, title, sub){
+    list = sortFiles(list.filter(matchesSearch));
+    return `
+      <div class="fade-in">
+        <div class="view-header">
+          <div class="view-title">${title}</div>
+          <div class="view-sub">${sub}</div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <select id="sortSelect" style="border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:12px;background:#fff;">
+            ${sortOptionsHtml()}
+          </select>
+        </div>
+        ${fileTable(list)}
+      </div>`;
+  }
+
+  function trashHtml(){
+    const cu = currentUser();
+    const canDestroy = cu.role !== 'user';
+    const list = sortFiles(visibleTrashList().filter(matchesSearch));
+    return `
+      <div class="fade-in">
+        <div class="view-header">
+          <div class="view-title">Trash</div>
+          <div class="view-sub">Items here can be restored${canDestroy ? ' or removed for good' : ''}.</div>
+        </div>
+        ${list.length && canDestroy ? `<div style="margin-bottom:14px;"><button class="upload-btn" id="emptyTrashBtn" style="background:var(--stamp-red);">Empty trash</button></div>` : ''}
+        ${trashTable(list)}
+      </div>`;
+  }
+
+  function badgeHtml(name){
+    const ext = extOf(name);
+    const color = TYPE_COLORS[ext] || TYPE_COLORS.default;
+    return `<span class="file-badge" style="background:${color}">${ext.slice(0,3).toUpperCase()}</span>`;
+  }
+
+  function fileTable(list){
+    if(!list.length){
+      return emptyStateHtml('Nothing here', state.search ? 'No files match your search.' : 'Upload a file to see it listed here.');
+    }
+    const cu = currentUser();
+    return `
+      <div class="ledger">
+        <div class="ledger-head">
+          <div></div><div>Name</div><div>Type</div><div class="hide-sm">Size</div><div class="hide-sm">Filed</div><div></div>
+        </div>
+        ${list.map(f=>{
+          const folder = f.folderId ? state.folders.find(fo=>String(fo.id)===String(f.folderId)) : null;
+          const canTrash = cu.role !== 'user' || f.ownerId === cu.id;
+          return `
+          <div class="ledger-row ${String(state.selectedFileId)===String(f.id)?'selected':''}" data-file-row="${f.id}">
+            <button class="star-btn ${f.starred?'on':''}" data-toggle-star="${f.id}" title="${f.starred?'Unstar file':'Star file'}">
+              ${f.starred ? uiIcon('star-filled', 15) : uiIcon('star', 15)}
+            </button>
+            <div class="file-name-cell">
+              <div style="min-width:0;">
+                <span class="file-name">${escapeHtml(f.name)}</span>
+                ${folder ? `<div class="file-loc">${escapeHtml(folder.name)}</div>` : ''}
+              </div>
+            </div>
+            <div>${badgeHtml(f.name)}</div>
+            <div class="cell-mono hide-sm">${fmtBytes(f.sizeBytes)}</div>
+            <div class="cell-mono hide-sm">${fmtDate(f.createdAt)}</div>
+            <div class="row-actions">
+              <button class="icon-btn" data-quick-share="${f.id}" title="Generate and copy share link">${uiIcon('link', 14)}</button>
+              ${canTrash ? `<button class="icon-btn" data-trash-file="${f.id}" title="Move to trash">${uiIcon('trash', 14)}</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function trashTable(list){
+    if(!list.length){ return emptyStateHtml('Trash is empty', 'Nothing to see here.'); }
+    const cu = currentUser();
+    const canDestroy = cu.role !== 'user';
+    return `
+      <div class="ledger">
+        <div class="ledger-head">
+          <div></div><div>Name</div><div>Type</div><div class="hide-sm">Size</div><div class="hide-sm">Filed</div><div></div>
+        </div>
+        ${list.map(f=>`
+          <div class="ledger-row" data-file-row="${f.id}">
+            <div>${badgeHtml(f.name)}</div>
+            <div class="file-name-cell"><span class="file-name">${escapeHtml(f.name)}</span></div>
+            <div>${badgeHtml(f.name)}</div>
+            <div class="cell-mono hide-sm">${fmtBytes(f.sizeBytes)}</div>
+            <div class="cell-mono hide-sm">${fmtDate(f.createdAt)}</div>
+            <div class="row-actions" style="opacity:1;">
+              <button class="icon-btn" data-restore-file="${f.id}" title="Restore">${uiIcon('restore', 14)}</button>
+              ${canDestroy ? `<button class="icon-btn danger" data-delete-file="${f.id}" title="Delete forever">${uiIcon('x', 14)}</button>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  function emptyStateHtml(title, sub){
+    return `
+      <div class="empty-state">
+        <div class="empty-stamp">NOT<br>ON<br>FILE</div>
+        <div class="es-title">${escapeHtml(title)}</div>
+        <div class="es-sub">${escapeHtml(sub)}</div>
+      </div>`;
+  }
+
+  /* ================= MINIMAL & EFFORTLESS SHARE DETAIL PANEL ================= */
+  function detailPanelHtml(){
+    const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+    if(!f) return '';
+    const cu = currentUser();
+    const canModify = cu.role !== 'user' || f.ownerId === cu.id;
+    const folder = f.folderId ? state.folders.find(fo=>String(fo.id)===String(f.folderId)) : null;
+    const shareUrl = window.location.origin + '/s/' + f.id;
+    const isShared = f.shared && f.shared.enabled;
+
+    return `
+      <aside class="detail-panel">
+        <div class="dp-header">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
+            ${badgeHtml(f.name)}
+            ${canModify
+              ? `<input class="dp-name-input" id="dpNameInput" value="${escapeHtml(f.name)}" title="Click to rename" />`
+              : `<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(f.name)}</div>`}
+          </div>
+          <button class="dp-close" id="dpClose" title="Close">${uiIcon('x', 13)}</button>
+        </div>
+
+        <div class="dp-meta-row">
+          <span>${fmtBytes(f.sizeBytes)}</span>
+          <span style="opacity:0.5;">·</span>
+          <span>${fmtDate(f.createdAt)}</span>
+          <span style="color:${f.trashed?'var(--stamp-red)':'var(--moss)'};margin-left:auto;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${f.trashed?'var(--stamp-red)':'var(--moss)'};"></span>
+            ${f.trashed ? 'Trash' : 'Active'}
+          </span>
+        </div>
+
+        <div class="dp-divider"></div>
+
+        ${canModify ? `
+        <div class="dp-row">
+          <span style="color:var(--ink-soft);">Folder</span>
+          <select id="dpFolderSelect">
+            <option value="">— No folder —</option>
+            ${state.folders.map(fo=>`<option value="${fo.id}" ${folder && String(folder.id)===String(fo.id)?'selected':''}>${escapeHtml(fo.name)}</option>`).join('')}
+          </select>
+        </div>` : ''}
+
+        <div class="dp-row">
+          <span style="color:var(--ink-soft);">Starred</span>
+          <button class="toggle ${f.starred?'on':''}" id="dpStarToggle" title="Toggle star"><span class="knob"></span></button>
+        </div>
+
+        <div class="dp-divider"></div>
+
+        <!-- SHARE SECTION -->
+        <div>
+          ${!isShared ? `
+            ${canModify ? `
+              <button class="plain-btn" id="dpEnableShareBtn" style="padding:6px 10px;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--radius-s);margin:4px 0 6px 0;">
+                ${uiIcon('link', 13)} Share Link
+              </button>
+            ` : `<div style="font-size:11px;color:var(--ink-soft);padding:3px 0;">Sharing disabled by owner.</div>`}
+          ` : `
+            <div class="share-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:10.5px;font-weight:600;color:var(--moss);display:inline-flex;align-items:center;gap:4px;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--moss);"></span> Link active
+                </span>
+                ${canModify ? `<button id="dpDisableShareBtn" style="background:none;border:none;color:var(--stamp-red);font-size:10px;cursor:pointer;text-decoration:underline;">Turn off</button>` : ''}
+              </div>
+              <div class="share-url-box">
+                <input readonly id="dpShareLink" value="${shareUrl}" />
+                <button class="copy-btn" id="dpCopyBtn">Copy</button>
+              </div>
+              ${canModify ? `
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;font-size:10.5px;color:var(--ink-soft);">
+                <span>Permission</span>
+                <select id="dpPermSelect" style="font-size:10px;padding:2px 4px;">
+                  <option value="view" ${f.shared.permission==='view'?'selected':''}>View / download</option>
+                  <option value="edit" ${f.shared.permission==='edit'?'selected':''}>Can edit</option>
+                </select>
+              </div>` : ''}
+            </div>
+          `}
+        </div>
+
+        <!-- DIRECT DOWNLOAD BUTTON -->
+        <a href="/api/files/${f.id}/download" download class="btn-download" title="Download file to computer">
+          ${uiIcon('download', 13)} Download File
+        </a>
+
+        ${canModify ? `
+        <div class="dp-actions">
+          ${f.trashed
+            ? `<button class="restore-btn" id="dpRestoreBtn" style="display:inline-flex;align-items:center;justify-content:center;gap:5px;">${uiIcon('restore', 12)} Restore</button>${cu.role!=='user' ? `<button class="trash-btn" id="dpDeleteForeverBtn" style="display:inline-flex;align-items:center;justify-content:center;gap:5px;">${uiIcon('x', 12)} Delete</button>` : ''}`
+            : `<button class="trash-btn" id="dpTrashBtn" style="display:inline-flex;align-items:center;justify-content:center;gap:5px;">${uiIcon('trash', 12)} Move to trash</button>`}
+        </div>` : `<div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;text-align:center;">Shared file — view only.</div>`}
+      </aside>`;
+  }
+
+  function modalHtml(){
+    if(!state.modal) return '';
+    if(state.modal.type === 'newFolder' || state.modal.type === 'renameFolder'){
+      const editing = state.modal.type === 'renameFolder';
+      const folder = editing ? state.folders.find(f=>String(f.id)===String(state.modal.id)) : null;
+      const chosenColor = state.modal.color || (folder ? folder.color : 'moss');
+      return `
+        <div class="modal-overlay" id="modalOverlay">
+          <div class="modal-card">
+            <div class="modal-title">${editing ? 'Rename folder' : 'New folder'}</div>
+            <input type="text" id="modalNameInput" placeholder="Folder name" value="${escapeHtml(folder ? folder.name : '')}" />
+            <div class="swatches">
+              ${FOLDER_COLORS.map(c=>`<button class="swatch ${chosenColor===c.id?'selected':''}" data-swatch="${c.id}" style="background:${c.hex}"></button>`).join('')}
+            </div>
+            <div class="modal-actions">
+              ${editing ? `<button id="modalDeleteFolder" style="color:var(--stamp-red);margin-right:auto;">Delete</button>` : ''}
+              <button id="modalCancel">Cancel</button>
+              <button class="primary" id="modalSave">${editing ? 'Save' : 'Create'}</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    if(state.modal.type === 'inviteUser'){
+      return `
+        <div class="modal-overlay" id="modalOverlay">
+          <div class="modal-card">
+            <div class="modal-title">Add account</div>
+            <input type="text" id="modalUserName" placeholder="Full name" />
+            <input type="text" id="modalUserEmail" placeholder="Email" />
+            <select id="modalUserRole">
+              <option value="user" selected>User</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+            <div class="modal-actions">
+              <button id="modalCancel">Cancel</button>
+              <button class="primary" id="modalSaveUser">Add</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    return '';
+  }
+
+  function notifPanelHtml(){
+    const cu = currentUser();
+    const list = state.notifications
+      .filter(n=> n.userId===cu.id || (n.targetRole==='admin' && cu.role==='admin'))
+      .sort((a,b)=> new Date(b.at)-new Date(a.at)).slice(0,15);
+    return `
+      <div class="notif-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${uiIcon('bell', 14)}
+            <strong style="font-size:12.5px;">Notifications</strong>
+          </div>
+          <button id="notifCloseBtn" class="icon-btn" title="Close">${uiIcon('x', 13)}</button>
+        </div>
+        ${list.length ? list.map(n=>`
+          <div class="notif-item ${n.read?'':'unread'}">
+            <div>${escapeHtml(n.message)}</div>
+            <div class="activity-time" style="width:auto;">${fmtDate(n.at)}</div>
+          </div>`).join('') : '<div class="notif-empty">No notifications yet.</div>'}
+      </div>`;
+  }
+
+  function userMenuHtml(){
+    const cu = currentUser();
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return `
+      <div class="notif-panel" style="width:215px;">
+        <div style="font-weight:600;font-size:13px;color:var(--navy-deep);">${escapeHtml(cu.name)}</div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-bottom:6px;">${escapeHtml(cu.email)}</div>
+        <span class="role-pill" style="background:${ROLE_META[cu.role].color}">${ROLE_META[cu.role].label}</span>
+        <div class="dp-divider"></div>
+        <button class="plain-btn" id="themeToggleMenuBtn" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span>Theme</span>
+          <span id="menuThemeText" style="font-size:11.5px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:6px;">
+            ${uiIcon(isDark ? 'sun' : 'moon', 13)} ${isDark ? 'Light mode' : 'Dark mode'}
+          </span>
+        </button>
+        <button class="plain-btn" id="logoutBtn" style="color:var(--stamp-red);display:flex;align-items:center;gap:6px;">
+          ${uiIcon('logout', 13)} Log out
+        </button>
+      </div>`;
+  }
+
+  function usersHtml(){
+    const cu = currentUser();
+    return `
+      <div class="fade-in">
+        <div class="view-header">
+          <div class="view-title">Users</div>
+          <div class="view-sub">${state.users.length} account${state.users.length===1?'':'s'} — manage roles and access.</div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <button class="upload-btn" id="inviteUserBtn" style="background:var(--navy);">${uiIcon('plus', 14)} Add account</button>
+        </div>
+        <div class="ledger">
+          <div class="ledger-head" style="grid-template-columns: 1.4fr 1fr 110px 100px 60px;">
+            <div>Name</div><div>Email</div><div>Role</div><div>Joined</div><div></div>
+          </div>
+          ${state.users.map(u=>`
+            <div class="ledger-row" style="grid-template-columns: 1.4fr 1fr 110px 100px 60px;cursor:default;">
+              <div class="file-name">${escapeHtml(u.name)}${u.id===cu.id?' (you)':''}</div>
+              <div class="cell-mono">${escapeHtml(u.email)}</div>
+              <div>
+                <select data-role-select="${u.id}" style="border:1px solid var(--line);border-radius:var(--radius-s);padding:4px 8px;font-size:11px;background:var(--input-bg);color:var(--ink);">
+                  <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+                  <option value="staff" ${u.role==='staff'?'selected':''}>Staff</option>
+                  <option value="user" ${u.role==='user'?'selected':''}>User</option>
+                </select>
+              </div>
+              <div class="cell-mono">${fmtDate(u.createdAt)}</div>
+              <div class="row-actions" style="opacity:1;justify-content:flex-start;">
+                <button class="icon-btn danger" data-remove-user="${u.id}" title="Remove account">${uiIcon('x', 13)}</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  function reportsHtml(){
+    const files = state.files.filter(f=>!f.trashed);
+    const byRole = {admin:0, staff:0, user:0};
+    state.users.forEach(u=> byRole[u.role] = (byRole[u.role]||0)+1);
+    const rep = state.reportsSummary || {};
+
+    return `
+      <div class="fade-in">
+        <div class="view-header">
+          <div class="view-title">Reports</div>
+          <div class="view-sub">A snapshot of activity across the workspace.</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-num">${rep.fileCount !== undefined ? rep.fileCount : files.length}</div><div class="stat-lbl">Active files</div></div>
+          <div class="stat-card"><div class="stat-num">${fmtBytes(rep.storageBytes !== undefined ? rep.storageBytes : usedBytes())}</div><div class="stat-lbl">Storage used</div></div>
+          <div class="stat-card"><div class="stat-num">${rep.userCount !== undefined ? rep.userCount : state.users.length}</div><div class="stat-lbl">Accounts</div></div>
+          <div class="stat-card"><div class="stat-num">${rep.trashedCount !== undefined ? rep.trashedCount : state.files.filter(f=>f.trashed).length}</div><div class="stat-lbl">In trash</div></div>
+        </div>
+        <div class="section-label">Accounts by role</div>
+        <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+          ${Object.keys(ROLE_META).map(r=>`<span class="role-pill" style="background:${ROLE_META[r].color}">${ROLE_META[r].label}: ${(rep.byRole && rep.byRole[r]) || byRole[r] || 0}</span>`).join('')}
+        </div>
+        <button class="upload-btn" id="exportReportBtn" style="background:var(--navy);">Export records as CSV</button>
+      </div>`;
+  }
+
+  // ---------------- toast ----------------
+  let toastTimer = null;
+  function showToast(msg){
+    const el = document.getElementById('toastEl');
+    if(!el) return;
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ el.classList.add('hidden'); }, 2200);
+  }
+
+  function setView(view, folderId){
+    state.view = view;
+    state.currentFolder = folderId !== undefined ? folderId : null;
+    state.selectedFileId = null;
+    state.notifOpen = false;
+    state.userMenuOpen = false;
+    render();
+  }
+
+  // ---------------- file upload ----------------
+  async function addFiles(fileListObj, targetFolderId){
+    const arr = Array.from(fileListObj || []);
+    if(!arr.length) return;
+    const cu = currentUser();
+    if(!cu) return;
+    let addedCount = 0;
+    const folderToUse = targetFolderId !== undefined ? targetFolderId : (state.view === 'files' ? state.currentFolder : null);
+    for(const file of arr){
+      const fd = new FormData();
+      fd.append('file', file);
+      if(folderToUse){
+        fd.append('folderId', folderToUse);
+      }
+      try {
+        const res = await api('/api/files', { method: 'POST', body: fd });
+        if(res && res.file) addedCount++;
+      } catch(err){
+        showToast('Upload failed for ' + file.name + ': ' + err.message);
+      }
+    }
+    if(addedCount > 0){
+      await refreshWorkspaceData();
+      render();
+      showToast(addedCount === 1 ? 'Filed 1 document.' : 'Filed ' + addedCount + ' documents.');
+    }
+  }
+
+  // ---------------- bind events ----------------
+  function bindEvents(){
+    // Auth Tab Switch
+    root.querySelectorAll('[data-auth-tab]').forEach(el=>{
+      el.addEventListener('click', e=>{
+        e.preventDefault();
+        state.authTab = el.getAttribute('data-auth-tab');
+        state.authError = '';
+        render();
+      });
+    });
+
+    // Sign In form
+    const signinForm = document.getElementById('signinForm');
+    if(signinForm) signinForm.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const email = document.getElementById('siEmail').value.trim().toLowerCase();
+      const password = document.getElementById('siPassword').value;
+      try {
+        const res = await api('/api/auth/login', { method:'POST', body: { email, password } });
+        state.currentUser = res.user;
+        state.authError = '';
+        state.view = 'dashboard';
+        await refreshWorkspaceData();
+        render();
+      } catch(err){
+        state.authError = err.message;
+        render();
+      }
+    });
+
+    // Register / Sign Up form
+    const registerForm = document.getElementById('registerForm');
+    if(registerForm) registerForm.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const password = document.getElementById('regPassword').value;
+      try {
+        const res = await api('/api/auth/register', { method:'POST', body: { name, email, password } });
+        state.currentUser = res.user;
+        state.authError = '';
+        state.view = 'dashboard';
+        await refreshWorkspaceData();
+        render();
+        showToast('Account created! Welcome, ' + res.user.name + '.');
+      } catch(err){
+        state.authError = err.message;
+        render();
+      }
+    });
+
+    // Quick demo login
+    root.querySelectorAll('[data-quick-email]').forEach(el=>{
+      el.addEventListener('click', async ()=>{
+        const email = el.getAttribute('data-quick-email');
+        try {
+          const res = await api('/api/auth/login', { method:'POST', body: { email, password: 'demo123' } });
+          state.currentUser = res.user;
+          state.authError = '';
+          state.view = 'dashboard';
+          await refreshWorkspaceData();
+          render();
+        } catch(err){
+          state.authError = err.message;
+          render();
+        }
+      });
+    });
+
+    // Nav
+    root.querySelectorAll('[data-view]').forEach(el=>{
+      el.addEventListener('click', ()=> setView(el.getAttribute('data-view')));
+    });
+
+    // Search
+    const searchInput = document.getElementById('searchInput');
+    if(searchInput){
+      searchInput.addEventListener('input', e=>{
+        state.search = e.target.value;
+        if(state.search.trim() && (state.view==='dashboard' || state.view==='folders')){
+          state.view = 'files'; state.currentFolder = null;
+        }
+        render();
+        const el2 = document.getElementById('searchInput');
+        if(el2){ el2.focus(); el2.selectionStart = el2.selectionEnd = el2.value.length; }
+      });
+    }
+
+    // Sort
+    const sortSelect = document.getElementById('sortSelect');
+    if(sortSelect){
+      sortSelect.addEventListener('change', e=>{ state.sortBy = e.target.value; render(); });
+    }
+
+    // File pick / upload
+    const fileInput = document.getElementById('fileInput');
+    const triggerPick = ()=> fileInput && fileInput.click();
+    const uploadBtnTop = document.getElementById('uploadBtnTop');
+    if(uploadBtnTop) uploadBtnTop.addEventListener('click', triggerPick);
+    const dzBrowseBtn = document.getElementById('dzBrowseBtn');
+    if(dzBrowseBtn) dzBrowseBtn.addEventListener('click', triggerPick);
+    const uploadToFolderBtn = document.getElementById('uploadToFolderBtn');
+    if(uploadToFolderBtn) uploadToFolderBtn.addEventListener('click', triggerPick);
+    if(fileInput) fileInput.addEventListener('change', e=> addFiles(e.target.files));
+
+    // Drag & Drop for root / folder dropzone
+    const dropzone = document.getElementById('dropzone');
+    if(dropzone){
+      dropzone.addEventListener('dragover', e=>{ e.preventDefault(); state.dragOver = true; dropzone.classList.add('drag'); });
+      dropzone.addEventListener('dragleave', ()=>{ state.dragOver = false; dropzone.classList.remove('drag'); });
+      dropzone.addEventListener('drop', e=>{
+        e.preventDefault(); state.dragOver = false; dropzone.classList.remove('drag');
+        addFiles(e.dataTransfer.files);
+      });
+    }
+
+    // Drag & Drop directly onto folder cards
+    root.querySelectorAll('.folder-card').forEach(el=>{
+      const folderId = el.getAttribute('data-open-folder');
+      if(!folderId) return;
+      el.addEventListener('dragover', e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        el.classList.add('drag-target');
+      });
+      el.addEventListener('dragleave', e=>{
+        e.preventDefault();
+        el.classList.remove('drag-target');
+      });
+      el.addEventListener('drop', async e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        el.classList.remove('drag-target');
+        await addFiles(e.dataTransfer.files, folderId);
+      });
+    });
+
+    // Folders navigation
+    root.querySelectorAll('[data-open-folder]').forEach(el=>{
+      el.addEventListener('click', e=>{
+        if(e.target.closest('[data-folder-menu]')) return;
+        e.stopPropagation();
+        const targetId = el.getAttribute('data-open-folder');
+        setView('files', targetId || null);
+      });
+    });
+
+    // Folder menu modal
+    root.querySelectorAll('[data-folder-menu]').forEach(el=>{
+      el.addEventListener('click', e=>{
+        e.stopPropagation();
+        state.modal = {type:'renameFolder', id: el.getAttribute('data-folder-menu')};
+        render();
+      });
+    });
+    ['newFolderBtn','newFolderBtn2'].forEach(id=>{
+      const btn = document.getElementById(id);
+      if(btn) btn.addEventListener('click', ()=>{ state.modal = {type:'newFolder', color:'moss'}; render(); });
+    });
+
+    // Sync button
+    const syncBtn = document.getElementById('syncBtn');
+    if(syncBtn) syncBtn.addEventListener('click', async ()=>{
+      await refreshWorkspaceData();
+      render();
+      showToast('Workspace synced with server.');
+    });
+
+    // Notifications & user menu
+    const bellBtn = document.getElementById('bellBtn');
+    if(bellBtn) bellBtn.addEventListener('click', async e=>{
+      e.stopPropagation();
+      state.notifOpen = !state.notifOpen;
+      state.userMenuOpen = false;
+      if(state.notifOpen){
+        try {
+          await api('/api/notifications/mark-read', { method:'POST' });
+          state.notifications.forEach(n => n.read = true);
+        } catch(err){}
+      }
+      render();
+    });
+    const notifCloseBtn = document.getElementById('notifCloseBtn');
+    if(notifCloseBtn) notifCloseBtn.addEventListener('click', e=>{ e.stopPropagation(); state.notifOpen=false; render(); });
+
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    if(userMenuBtn) userMenuBtn.addEventListener('click', e=>{ e.stopPropagation(); state.userMenuOpen = !state.userMenuOpen; state.notifOpen=false; render(); });
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) logoutBtn.addEventListener('click', async ()=>{
+      try { await api('/api/auth/logout', { method:'POST' }); } catch(e){}
+      state.currentUser = null;
+      state.userMenuOpen = false;
+      state.selectedFileId = null;
+      state.view = 'dashboard';
+      render();
+    });
+
+    // Theme toggle buttons (topbar, login, and user menu)
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if(themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+    const themeToggleLoginBtn = document.getElementById('themeToggleLoginBtn');
+    if(themeToggleLoginBtn) themeToggleLoginBtn.addEventListener('click', toggleTheme);
+    const themeToggleMenuBtn = document.getElementById('themeToggleMenuBtn');
+    if(themeToggleMenuBtn) themeToggleMenuBtn.addEventListener('click', toggleTheme);
+
+    // File Rows selection
+    root.querySelectorAll('[data-file-row]').forEach(el=>{
+      el.addEventListener('click', e=>{
+        if(e.target.closest('[data-toggle-star]') || e.target.closest('[data-trash-file]') ||
+           e.target.closest('[data-restore-file]') || e.target.closest('[data-delete-file]') ||
+           e.target.closest('[data-quick-share]')) return;
+        state.selectedFileId = el.getAttribute('data-file-row');
+        render();
+      });
+    });
+
+    // Quick share button on table row
+    root.querySelectorAll('[data-quick-share]').forEach(el=>{
+      el.addEventListener('click', async e=>{
+        e.stopPropagation();
+        const id = el.getAttribute('data-quick-share');
+        const f = state.files.find(x => String(x.id) === String(id));
+        if(!f) return;
+        try {
+          if(!f.shared || !f.shared.enabled){
+            const res = await api('/api/files/' + id, {
+              method: 'PATCH',
+              body: { shared: { enabled: true, permission: 'view' } }
+            });
+            f.shared = res.file.shared;
+          }
+          const link = window.location.origin + '/s/' + id;
+          if(navigator.clipboard && navigator.clipboard.writeText){
+            await navigator.clipboard.writeText(link);
+          }
+          showToast('Share link copied to clipboard!');
+          render();
+        } catch(err){
+          showToast(err.message);
+        }
+      });
+    });
+
+    // Star toggle
+    root.querySelectorAll('[data-toggle-star]').forEach(el=>{
+      el.addEventListener('click', async e=>{
+        e.stopPropagation();
+        const id = el.getAttribute('data-toggle-star');
+        const f = state.files.find(x=>String(x.id)===String(id));
+        if(!f) return;
+        try {
+          const res = await api('/api/files/' + id, { method:'PATCH', body: { starred: !f.starred } });
+          f.starred = res.file.starred;
+          render();
+        } catch(err){ showToast(err.message); }
+      });
+    });
+
+    // Move to trash
+    root.querySelectorAll('[data-trash-file]').forEach(el=>{
+      el.addEventListener('click', async e=>{
+        e.stopPropagation();
+        const id = el.getAttribute('data-trash-file');
+        try {
+          await api('/api/files/' + id + '/trash', { method:'POST' });
+          const f = state.files.find(x=>String(x.id)===String(id));
+          if(f) f.trashed = true;
+          showToast('Moved to trash.');
+          render();
+        } catch(err){ showToast(err.message); }
+      });
+    });
+
+    // Restore
+    root.querySelectorAll('[data-restore-file]').forEach(el=>{
+      el.addEventListener('click', async e=>{
+        e.stopPropagation();
+        const id = el.getAttribute('data-restore-file');
+        try {
+          await api('/api/files/' + id + '/restore', { method:'POST' });
+          const f = state.files.find(x=>String(x.id)===String(id));
+          if(f) f.trashed = false;
+          showToast('Restored.');
+          render();
+        } catch(err){ showToast(err.message); }
+      });
+    });
+
+    // Delete forever
+    root.querySelectorAll('[data-delete-file]').forEach(el=>{
+      el.addEventListener('click', async e=>{
+        e.stopPropagation();
+        const id = el.getAttribute('data-delete-file');
+        try {
+          await api('/api/files/' + id, { method:'DELETE' });
+          state.files = state.files.filter(x=>String(x.id)!==String(id));
+          showToast('Deleted for good.');
+          render();
+        } catch(err){ showToast(err.message); }
+      });
+    });
+
+    // Empty trash
+    const emptyTrashBtn = document.getElementById('emptyTrashBtn');
+    if(emptyTrashBtn) emptyTrashBtn.addEventListener('click', async ()=>{
+      try {
+        await api('/api/files/trash/empty', { method:'POST' });
+        state.files = state.files.filter(x=>!x.trashed);
+        showToast('Trash emptied.');
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    // Detail panel handlers
+    const dpClose = document.getElementById('dpClose');
+    if(dpClose) dpClose.addEventListener('click', ()=>{ state.selectedFileId = null; render(); });
+
+    const dpNameInput = document.getElementById('dpNameInput');
+    if(dpNameInput){
+      const commit = async ()=>{
+        const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+        const newName = dpNameInput.value.trim();
+        if(f && newName && newName !== f.name){
+          try {
+            const res = await api('/api/files/' + f.id, { method:'PATCH', body: { name: newName } });
+            f.name = res.file.name;
+            render();
+          } catch(err){ showToast(err.message); }
+        }
+      };
+      dpNameInput.addEventListener('blur', commit);
+      dpNameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') dpNameInput.blur(); });
+    }
+
+    const dpFolderSelect = document.getElementById('dpFolderSelect');
+    if(dpFolderSelect) dpFolderSelect.addEventListener('change', async e=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      const folderId = e.target.value ? parseInt(e.target.value, 10) : null;
+      try {
+        const res = await api('/api/files/' + f.id, { method:'PATCH', body: { folderId } });
+        f.folderId = res.file.folderId;
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    const dpStarToggle = document.getElementById('dpStarToggle');
+    if(dpStarToggle) dpStarToggle.addEventListener('click', async ()=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      try {
+        const res = await api('/api/files/' + f.id, { method:'PATCH', body: { starred: !f.starred } });
+        f.starred = res.file.starred;
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    // Easy share link generation
+    const dpEnableShareBtn = document.getElementById('dpEnableShareBtn');
+    if(dpEnableShareBtn) dpEnableShareBtn.addEventListener('click', async ()=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      try {
+        const res = await api('/api/files/' + f.id, {
+          method: 'PATCH',
+          body: { shared: { enabled: true, permission: 'view' } }
+        });
+        f.shared = res.file.shared;
+        const link = window.location.origin + '/s/' + f.id;
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(link);
+        }
+        showToast('Share link created & copied to clipboard!');
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    const dpDisableShareBtn = document.getElementById('dpDisableShareBtn');
+    if(dpDisableShareBtn) dpDisableShareBtn.addEventListener('click', async ()=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      try {
+        const res = await api('/api/files/' + f.id, {
+          method: 'PATCH',
+          body: { shared: { enabled: false, permission: 'view' } }
+        });
+        f.shared = res.file.shared;
+        showToast('Share link disabled.');
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    const dpPermSelect = document.getElementById('dpPermSelect');
+    if(dpPermSelect) dpPermSelect.addEventListener('change', async e=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      try {
+        const res = await api('/api/files/' + f.id, {
+          method: 'PATCH',
+          body: { shared: { enabled: true, permission: e.target.value } }
+        });
+        f.shared = res.file.shared;
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    const dpCopyBtn = document.getElementById('dpCopyBtn');
+    if(dpCopyBtn) dpCopyBtn.addEventListener('click', ()=>{
+      const linkEl = document.getElementById('dpShareLink');
+      if(linkEl){
+        linkEl.select();
+        try {
+          navigator.clipboard.writeText(linkEl.value);
+        } catch(e){
+          document.execCommand('copy');
+        }
+        showToast('Link copied to clipboard!');
+      }
+    });
+
+    const dpTrashBtn = document.getElementById('dpTrashBtn');
+    if(dpTrashBtn) dpTrashBtn.addEventListener('click', async ()=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      try {
+        await api('/api/files/' + f.id + '/trash', { method:'POST' });
+        f.trashed = true;
+        state.selectedFileId = null;
+        showToast('Moved to trash.');
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    const dpRestoreBtn = document.getElementById('dpRestoreBtn');
+    if(dpRestoreBtn) dpRestoreBtn.addEventListener('click', async ()=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      try {
+        await api('/api/files/' + f.id + '/restore', { method:'POST' });
+        f.trashed = false;
+        showToast('Restored.');
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    const dpDeleteForeverBtn = document.getElementById('dpDeleteForeverBtn');
+    if(dpDeleteForeverBtn) dpDeleteForeverBtn.addEventListener('click', async ()=>{
+      const f = state.files.find(x=>String(x.id)===String(state.selectedFileId));
+      if(!f) return;
+      try {
+        await api('/api/files/' + f.id, { method:'DELETE' });
+        state.files = state.files.filter(x=>String(x.id)!==String(f.id));
+        state.selectedFileId = null;
+        showToast('Deleted for good.');
+        render();
+      } catch(err){ showToast(err.message); }
+    });
+
+    // Users view handlers
+    root.querySelectorAll('[data-role-select]').forEach(el=>{
+      el.addEventListener('change', async e=>{
+        const id = el.getAttribute('data-role-select');
+        const role = e.target.value;
+        try {
+          const res = await api('/api/users/' + id, { method:'PATCH', body: { role } });
+          const u = state.users.find(x=>String(x.id)===String(id));
+          if(u && res && res.user) u.role = res.user.role;
+          showToast('Role updated.');
+          render();
+        } catch(err){
+          showToast(err.message);
+          render();
+        }
+      });
+    });
+
+    root.querySelectorAll('[data-remove-user]').forEach(el=>{
+      el.addEventListener('click', async ()=>{
+        const id = el.getAttribute('data-remove-user');
+        if(!confirm('Are you sure you want to remove this account?')) return;
+        try {
+          await api('/api/users/' + id, { method:'DELETE' });
+          state.users = state.users.filter(x=>String(x.id)!==String(id));
+          await refreshWorkspaceData();
+          showToast('Account removed.');
+          render();
+        } catch(err){ showToast(err.message); }
+      });
+    });
+
+    const inviteUserBtn = document.getElementById('inviteUserBtn');
+    if(inviteUserBtn) inviteUserBtn.addEventListener('click', ()=>{ state.modal={type:'inviteUser'}; render(); });
+    const dashAddAccountBtn = document.getElementById('dashAddAccountBtn');
+    if(dashAddAccountBtn) dashAddAccountBtn.addEventListener('click', ()=>{ state.modal={type:'inviteUser'}; render(); });
+
+    // Reports export
+    const exportReportBtn = document.getElementById('exportReportBtn');
+    if(exportReportBtn) exportReportBtn.addEventListener('click', ()=>{
+      window.location.href = '/api/reports/export';
+    });
+
+    // Modals
+    const overlay = document.getElementById('modalOverlay');
+    if(overlay){
+      overlay.addEventListener('click', e=>{ if(e.target === overlay){ state.modal = null; render(); } });
+      root.querySelectorAll('[data-swatch]').forEach(el=>{
+        el.addEventListener('click', ()=>{ state.modal.color = el.getAttribute('data-swatch'); render(); });
+      });
+      const modalCancel = document.getElementById('modalCancel');
+      if(modalCancel) modalCancel.addEventListener('click', ()=>{ state.modal = null; render(); });
+
+      const modalSave = document.getElementById('modalSave');
+      if(modalSave) modalSave.addEventListener('click', async ()=>{
+        const nameInput = document.getElementById('modalNameInput');
+        const name = nameInput ? nameInput.value.trim() : '';
+        if(!name){ showToast('Give the folder a name first.'); return; }
+        try {
+          if(state.modal.type === 'newFolder'){
+            const res = await api('/api/folders', {
+              method: 'POST',
+              body: { name, color: state.modal.color || 'moss' }
+            });
+            if(res && res.folder) state.folders.push(res.folder);
+            showToast('Folder created.');
+          } else {
+            const res = await api('/api/folders/' + state.modal.id, {
+              method: 'PATCH',
+              body: { name, color: state.modal.color || 'moss' }
+            });
+            const fo = state.folders.find(x=>String(x.id)===String(state.modal.id));
+            if(fo && res && res.folder){ fo.name = res.folder.name; fo.color = res.folder.color; }
+            showToast('Folder saved.');
+          }
+          state.modal = null;
+          await refreshWorkspaceData();
+          render();
+        } catch(err){ showToast(err.message); }
+      });
+
+      const modalDeleteFolder = document.getElementById('modalDeleteFolder');
+      if(modalDeleteFolder) modalDeleteFolder.addEventListener('click', async ()=>{
+        const id = state.modal.id;
+        try {
+          await api('/api/folders/' + id, { method:'DELETE' });
+          state.folders = state.folders.filter(x=>String(x.id)!==String(id));
+          state.files.forEach(file=>{ if(String(file.folderId)===String(id)) file.folderId = null; });
+          if(String(state.currentFolder) === String(id)){
+            state.currentFolder = null;
+            state.view = 'files';
+          }
+          state.modal = null;
+          showToast('Folder deleted.');
+          render();
+        } catch(err){ showToast(err.message); }
+      });
+
+      const modalSaveUser = document.getElementById('modalSaveUser');
+      if(modalSaveUser) modalSaveUser.addEventListener('click', async ()=>{
+        const name = document.getElementById('modalUserName').value.trim();
+        const email = document.getElementById('modalUserEmail').value.trim().toLowerCase();
+        const role = document.getElementById('modalUserRole').value;
+        if(!name || !email){ showToast('Name and email are required.'); return; }
+        try {
+          const res = await api('/api/users', {
+            method: 'POST',
+            body: { name, email, role }
+          });
+          if(res && res.user) state.users.push(res.user);
+          state.modal = null;
+          render();
+          showToast('Account added. Temp password: ' + (res.tempPassword || 'demo123'));
+        } catch(err){ showToast(err.message); }
+      });
+    }
+  }
+
+  // ---------------- init ----------------
+  (async function init(){
+    await loadWorkspace();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
